@@ -7,8 +7,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    const id = (await params).id;
     const collection = await getPostsCollection();
-    const post = await collection.findOne({ _id: new ObjectId(params.id) });
+    const post = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -17,7 +18,7 @@ export async function GET(
     // Get comments for this post
     const commentsCollection = await getCommentsCollection();
     const comments = await commentsCollection
-      .find({ postId: new ObjectId(params.id) })
+      .find({ postId: new ObjectId(id) })
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -50,11 +51,12 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    const id = (await params).id;
     const userId = request.headers.get("x-user-id");
     const userRole = request.headers.get("x-user-role");
 
     const collection = await getPostsCollection();
-    const post = await collection.findOne({ _id: new ObjectId(params.id) });
+    const post = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -87,10 +89,10 @@ export async function PUT(
       },
     };
 
-    await collection.updateOne({ _id: new ObjectId(params.id) }, update);
+    await collection.updateOne({ _id: new ObjectId(id) }, update);
 
     const updatedPost = await collection.findOne({
-      _id: new ObjectId(params.id),
+      _id: new ObjectId(id),
     });
 
     return NextResponse.json({
@@ -115,17 +117,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const id = (await params).id;
     const userId = request.headers.get("x-user-id");
     const userRole = request.headers.get("x-user-role");
 
     const collection = await getPostsCollection();
-    const post = await collection.findOne({ _id: new ObjectId(params.id) });
+    const post = await collection.findOne({ _id: new ObjectId(id) });
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
-    // Check if user has permission to delete
     if (userRole !== "admin" && post.authorId.toString() !== userId) {
       return NextResponse.json(
         { error: "Unauthorized to delete this post" },
@@ -133,11 +135,10 @@ export async function DELETE(
       );
     }
 
-    await collection.deleteOne({ _id: new ObjectId(params.id) });
+    await collection.deleteOne({ _id: new ObjectId(id) });
 
-    // Delete associated comments
     const commentsCollection = await getCommentsCollection();
-    await commentsCollection.deleteMany({ postId: new ObjectId(params.id) });
+    await commentsCollection.deleteMany({ postId: new ObjectId(id) });
 
     return NextResponse.json({
       success: true,

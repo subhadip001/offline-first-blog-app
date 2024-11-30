@@ -7,14 +7,14 @@ export function CreatePostForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
-  const { createPost, isOnline } = usePosts();
+  const { createPostMutation, isOnline } = usePosts();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      await createPost.mutateAsync({ title, content });
+      await createPostMutation.mutateAsync({ title, content });
       // Clear form after successful creation
       setTitle("");
       setContent("");
@@ -72,10 +72,10 @@ export function CreatePostForm() {
 
       <button
         type="submit"
-        disabled={createPost.isPending}
+        disabled={createPostMutation.isPending}
         className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
       >
-        {createPost.isPending ? "Creating..." : "Create Post"}
+        {createPostMutation.isPending ? "Creating..." : "Create Post"}
       </button>
     </form>
   );

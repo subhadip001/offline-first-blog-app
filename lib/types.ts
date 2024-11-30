@@ -1,4 +1,9 @@
-import { Store } from 'tinybase';
+import { Store } from "tinybase";
+
+export type CreatePostData = {
+  title: string;
+  content: string;
+};
 
 export interface Post {
   id: string;
@@ -18,8 +23,8 @@ export interface Comment {
 }
 
 export interface PendingChange {
-  type: 'create' | 'update' | 'delete';
-  table: 'posts' | 'comments';
+  type: "create" | "update" | "delete";
+  table: "posts" | "comments";
   id: string;
   data?: any;
   timestamp: number;
@@ -40,7 +45,7 @@ export interface StoreValues {
 
 export type BlogStore = Store;
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = "admin" | "user";
 
 export interface User {
   id: string;

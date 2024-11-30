@@ -5,11 +5,7 @@ import { useTinybase } from "@/providers/TinybaseProvider";
 import { useAuthContext } from "@/providers/AuthProvider";
 import type { Post } from "@/lib/db/schemas";
 import { fetchPosts, QueryKeys } from "@/lib/queries";
-
-type CreatePostData = {
-  title: string;
-  content: string;
-};
+import { CreatePostData } from "@/lib/types";
 
 export function usePosts() {
   const { store, isOnline } = useTinybase();
@@ -22,7 +18,7 @@ export function usePosts() {
     enabled: isOnline, // Only fetch when online
   });
 
-  const createPost = useMutation({
+  const createPostMutation = useMutation({
     mutationFn: async (postData: CreatePostData) => {
       const token = localStorage.getItem("token");
       const res = await fetch("/api/posts", {
@@ -46,7 +42,7 @@ export function usePosts() {
     },
   });
 
-  const deletePost = useMutation({
+  const deletePostMutation = useMutation({
     mutationFn: async (postId: string) => {
       const token = localStorage.getItem("token");
       const res = await fetch(`/api/posts/${postId}`, {
@@ -75,8 +71,8 @@ export function usePosts() {
   return {
     posts,
     isLoading,
-    createPost,
-    deletePost,
+    createPostMutation,
+    deletePostMutation,
     canDeletePost,
     isOnline,
   };

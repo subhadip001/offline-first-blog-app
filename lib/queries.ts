@@ -1,3 +1,5 @@
+import { CreatePostData } from "./types";
+
 export enum QueryKeys {
   POSTS = "posts",
 }
@@ -23,11 +25,12 @@ const fechData = async (url: string) => {
 };
 
 const postData = async (url: string, data: any) => {
+  const token = getAccessToken();
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${getAccessToken()}`,
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(data),
   });
@@ -35,7 +38,16 @@ const postData = async (url: string, data: any) => {
   return res.json();
 };
 
-export async function fetchPosts() {
-  const data = await fechData("/api/posts");
-  return data.posts;
-}
+export const fetchPosts = () => {
+  return fechData("/api/posts");
+};
+
+export const fetchPostById = async (postId: string) => {
+  const response = await fechData(`/api/posts/${postId}`);
+  return response;
+};
+
+export const createPost = (data: CreatePostData) => {
+  const res = postData("/api/posts", data);
+  return res;
+};
