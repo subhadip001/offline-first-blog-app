@@ -1,5 +1,7 @@
 "use client";
 
+import { CreatePostForm } from "@/components/posts/CreatePostForm";
+import { PostList } from "@/components/posts/PostList";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import { useRouter } from "next/navigation";
@@ -17,7 +19,11 @@ export default function Home() {
   }, [loading, isAuthenticated, router]);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -45,6 +51,10 @@ export default function Home() {
         </div>
 
         {/* Main content will go here */}
+        <section>
+          <CreatePostForm />
+          <PostList />
+        </section>
       </div>
     </div>
   );

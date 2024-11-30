@@ -14,12 +14,27 @@ export async function GET(
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
     }
 
+    // Get comments for this post
+    const commentsCollection = await getCommentsCollection();
+    const comments = await commentsCollection
+      .find({ postId: new ObjectId(params.id) })
+      .sort({ createdAt: -1 })
+      .toArray();
+
     return NextResponse.json({
       post: {
         ...post,
         id: post._id.toString(),
+        authorId: post.authorId.toString(),
         _id: undefined,
       },
+      comments: comments.map((comment) => ({
+        ...comment,
+        id: comment._id.toString(),
+        postId: comment.postId.toString(),
+        authorId: comment.authorId.toString(),
+        _id: undefined,
+      })),
     });
   } catch (error) {
     console.error("Failed to fetch post:", error);
@@ -47,27 +62,26 @@ export async function PUT(
 
     // Check if user has permission to update
     if (userRole !== "admin" && post.authorId.toString() !== userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Unauthorized to edit this post" },
+        { status: 403 }
+      );
     }
 
     const json = await request.json();
-    const { title, content, version } = json;
+    const { title, content } = json;
 
-    // Implement Last-Write-Wins conflict resolution
-    if (version && version < post.version) {
+    if (!title?.trim() || !content?.trim()) {
       return NextResponse.json(
-        {
-          error: "Conflict: newer version exists",
-          serverVersion: post.version,
-        },
-        { status: 409 }
+        { error: "Title and content are required" },
+        { status: 400 }
       );
     }
 
     const update = {
       $set: {
-        ...(title && { title }),
-        ...(content && { content }),
+        title: title.trim(),
+        content: content.trim(),
         updatedAt: new Date(),
         version: (post.version || 0) + 1,
       },
@@ -83,6 +97,7 @@ export async function PUT(
       post: {
         ...updatedPost,
         id: updatedPost?._id.toString(),
+        authorId: updatedPost?.authorId.toString(),
         _id: undefined,
       },
     });
@@ -112,16 +127,22 @@ export async function DELETE(
 
     // Check if user has permission to delete
     if (userRole !== "admin" && post.authorId.toString() !== userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return NextResponse.json(
+        { error: "Unauthorized to delete this post" },
+        { status: 403 }
+      );
     }
 
     await collection.deleteOne({ _id: new ObjectId(params.id) });
 
-    // Also delete associated comments
+    // Delete associated comments
     const commentsCollection = await getCommentsCollection();
     await commentsCollection.deleteMany({ postId: new ObjectId(params.id) });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      message: "Post deleted successfully",
+    });
   } catch (error) {
     console.error("Failed to delete post:", error);
     return NextResponse.json(
