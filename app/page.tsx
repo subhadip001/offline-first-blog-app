@@ -6,15 +6,19 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Home() {
-  const { user, isAuthenticated, logout } = useAuthContext();
+  const { user, isAuthenticated, logout, loading } = useAuthContext();
   const { isOnline } = useTinybase();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!loading && !isAuthenticated()) {
       router.push("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [loading, isAuthenticated, router]);
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen p-8">

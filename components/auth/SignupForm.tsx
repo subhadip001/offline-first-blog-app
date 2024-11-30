@@ -1,15 +1,14 @@
 "use client";
-
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/providers/AuthProvider";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-export function LoginForm() {
+export default function SignupForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const { login } = useAuthContext();
+  const { signup } = useAuthContext();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,10 +16,10 @@ export function LoginForm() {
     setError("");
 
     try {
-      await login(username, password);
+      await signup(username, password);
       router.push("/");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Failed to sign up");
     }
   };
 
@@ -28,7 +27,7 @@ export function LoginForm() {
     <div className="max-w-md w-full space-y-8">
       <div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          Sign in to your account
+          Create your account
         </h2>
       </div>
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -74,18 +73,18 @@ export function LoginForm() {
             type="submit"
             className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
-            Sign in
+            Sign up
           </button>
         </div>
       </form>
       <div>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Don&apos;t have an account?{" "}
+          Already have an account?{" "}
           <Link
-            href="/signup"
+            href="/login"
             className="font-medium text-indigo-600 hover:text-indigo-500"
           >
-            Sign up
+            Sign in
           </Link>
         </p>
       </div>
