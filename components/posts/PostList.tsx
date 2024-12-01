@@ -2,10 +2,12 @@
 
 import { usePosts } from "@/hooks/usePosts";
 import { Post } from "@/lib/db/schemas";
-import Link from "next/link";
+import { formatRelativeTime } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import DeleteButton from "../common/DeleteButton";
 import { Pagination } from "../common/Pagination";
+import { Card } from "../ui/card";
 
 export function PostList() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,6 +45,7 @@ export function PostList() {
 
   const handleDelete = async (e: React.MouseEvent, postId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this post?")) {
       if (!isOnline) {
         deletePostOffline(postId);
@@ -60,10 +63,10 @@ export function PostList() {
     <div>
       <div className="space-y-6">
         {data.posts.map((post: Post) => (
-          <Link
-            href={`/posts/${post.id}`}
+          <Card
+            onClick={() => router.push(`/posts/${post.id}`)}
             key={post.id}
-            className="block bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow"
+            className="block cursor-pointer bg-white rounded-lg p-6 hover:shadow-md transition-shadow"
           >
             <article>
               <div className="flex justify-between items-start">
@@ -71,23 +74,16 @@ export function PostList() {
                   {post.title}
                 </h2>
                 {canDeletePost(post) && (
-                  <button
-                    onClick={(e) => handleDelete(e, post.id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Delete
-                  </button>
+                  <DeleteButton handleClick={(e) => handleDelete(e, post.id)} />
                 )}
               </div>
-              <p className="mt-2 text-gray-600 line-clamp-3">{post.content}</p>
+              <p className="mt-2 text-gray-600 line-clamp-1">{post.content}</p>
               <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
-                <span>
-                  Posted on: {new Date(post.createdAt).toLocaleDateString()}
-                </span>
-                <span className="text-indigo-600">Read more →</span>
+                <span>{formatRelativeTime(new Date(post.createdAt))}</span>
+                <span className="text-blue-600">Read more</span>
               </div>
             </article>
-          </Link>
+          </Card>
         ))}
       </div>
       <Pagination

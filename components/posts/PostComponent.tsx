@@ -1,13 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { usePosts } from "@/hooks/usePosts";
-import { useParams, useRouter } from "next/navigation";
-import { useAuthContext } from "@/providers/AuthProvider";
-import { fetchPostById } from "@/lib/queries";
-import { useEffect } from "react";
-import { Comments } from "./Comments";
 import { usePost } from "@/hooks/usePost";
+import { usePosts } from "@/hooks/usePosts";
+import { formatRelativeTime } from "@/lib/utils";
+import { useAuthContext } from "@/providers/AuthProvider";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import DeleteButton from "../common/DeleteButton";
+import Header from "../common/Header";
+import { Comments } from "./Comments";
 
 export default function PostComponent() {
   const router = useRouter();
@@ -15,12 +16,6 @@ export default function PostComponent() {
   const { isAuthenticated, user, loading } = useAuthContext();
   const { deletePostMutation, deletePostOffline, canDeletePost, isOnline } =
     usePosts();
-
-  // const { data, isLoading } = useQuery({
-  //   queryKey: ["post", id as string],
-  //   queryFn: () => fetchPostById(id as string),
-  //   enabled: !!id && isOnline,
-  // });
 
   const { data, isLoading } = usePost(id as string);
 
@@ -32,8 +27,15 @@ export default function PostComponent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
+      <div className="min-h-screen p-8">
+        <div className="">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -41,7 +43,7 @@ export default function PostComponent() {
   if (isLoading) {
     return (
       <div className="min-h-screen p-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
@@ -60,7 +62,7 @@ export default function PostComponent() {
           <div className="text-red-500">Failed to load post</div>
           <button
             onClick={() => router.push("/")}
-            className="mt-4 text-indigo-600 hover:text-indigo-800"
+            className="mt-4 text-blue-600 hover:text-blue-800"
           >
             Go back to posts
           </button>
@@ -90,19 +92,13 @@ export default function PostComponent() {
   };
 
   return (
-    <div className="min-h-screen p-8 bg-gray-">
-      <div className="max-w-3xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-6">
+    <div className="min-h-screen p-8 ">
+      <Header />
+      <div className="">
+        <div className="bg-white rounded-lg border p-6">
           <div className="flex justify-between items-start mb-4">
             <h1 className="text-3xl font-bold text-gray-900">{post?.title}</h1>
-            {canDeletePost(post) && (
-              <button
-                onClick={handleDelete}
-                className="text-red-600 hover:text-red-800 font-medium"
-              >
-                Delete Post
-              </button>
-            )}
+            {canDeletePost(post) && <DeleteButton handleClick={handleDelete} />}
           </div>
 
           <div className="prose max-w-none">
@@ -110,21 +106,13 @@ export default function PostComponent() {
           </div>
 
           <div className="mt-6 text-sm text-gray-500">
-            Posted on: {new Date(post?.createdAt).toLocaleDateString()}
+            <span>{formatRelativeTime(new Date(post.createdAt))}</span>
           </div>
         </div>
 
-        {/* Comments Section */}
         <div className="mt-8">
           <Comments postId={id as string} existingComments={comments} />
         </div>
-
-        <button
-          onClick={() => router.push("/")}
-          className="mt-6 text-indigo-600 hover:text-indigo-800"
-        >
-          ← Back to posts
-        </button>
       </div>
     </div>
   );

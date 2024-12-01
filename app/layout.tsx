@@ -16,7 +16,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <QueryProvider>
           <AuthProvider>
-            <TinybaseProvider>{children}</TinybaseProvider>
+            <TinybaseProvider>
+              <main className="w-[80%] mx-auto">{children}</main>
+            </TinybaseProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

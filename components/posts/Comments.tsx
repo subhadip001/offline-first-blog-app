@@ -5,6 +5,10 @@ import type { Comment } from "@/lib/db/schemas";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import { useState } from "react";
+import { Textarea } from "../ui/textarea";
+import { Button } from "../ui/button";
+import DeleteButton from "../common/DeleteButton";
+import { formatRelativeTime } from "@/lib/utils";
 
 interface CommentsProps {
   postId: string;
@@ -71,16 +75,18 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Comments</h2>
-
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <h2 className="text-xl font-bold"> {existingComments.length} Comments</h2>
+      <form onSubmit={handleSubmit} className="space-y-2">
         <div>
-          <textarea
+          <Textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setError("");
+            }}
             placeholder="Add a comment..."
             rows={3}
-            className="w-full rounded-lg border-gray-300 text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            className="w-full rounded-lg border-gray-300 text-black shadow-sm focus:border-blue-500 focus:ring-blue-500"
           />
         </div>
 
@@ -93,31 +99,25 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
           </div>
         )}
 
-        <button
+        <Button
           type="submit"
           disabled={createCommentMutation.isPending}
-          className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
+          className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400"
         >
           {createCommentMutation.isPending ? "Posting..." : "Post Comment"}
-        </button>
+        </Button>
       </form>
-
       <div className="space-y-4">
         {existingComments.map((comment) => (
-          <div key={comment.id} className="bg-white p-4 rounded-lg shadow">
+          <div key={comment.id} className="bg-white p-4 rounded-md border">
             <div className="flex justify-between items-start">
               <p className="text-gray-700">{comment.content}</p>
               {canDeleteComment(comment) && (
-                <button
-                  onClick={() => handleDelete(comment.id)}
-                  className="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Delete
-                </button>
+                <DeleteButton handleClick={() => handleDelete(comment.id)} />
               )}
             </div>
             <div className="mt-2 text-sm text-gray-500">
-              Posted on: {new Date(comment.createdAt).toLocaleDateString()}
+              {formatRelativeTime(new Date(comment.createdAt))}
             </div>
           </div>
         ))}

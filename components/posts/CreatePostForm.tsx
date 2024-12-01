@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { usePosts } from "@/hooks/usePosts";
+import { useState } from "react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 
 export function CreatePostForm() {
   const [title, setTitle] = useState("");
@@ -22,7 +25,6 @@ export function CreatePostForm() {
 
     try {
       await createPostMutation.mutateAsync({ title, content });
-      // Clear form after successful creation
       setTitle("");
       setContent("");
     } catch (err) {
@@ -33,7 +35,7 @@ export function CreatePostForm() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 mb-8 p-4 bg-white rounded-lg shadow"
+      className="space-y-4 mb-8 p-4 bg-white rounded-md border"
     >
       <div>
         <label
@@ -42,12 +44,13 @@ export function CreatePostForm() {
         >
           Title
         </label>
-        <input
+        <Input
           type="text"
           id="title"
           value={title}
+          placeholder="Enter post title"
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 block w-full text-black rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full text-black rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
         />
       </div>
@@ -59,12 +62,13 @@ export function CreatePostForm() {
         >
           Content
         </label>
-        <textarea
+        <Textarea
           id="content"
           value={content}
+          placeholder="Enter post content"
           onChange={(e) => setContent(e.target.value)}
           rows={4}
-          className="mt-1 block w-full text-black rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+          className="mt-1 block w-full text-black rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           required
         />
       </div>
@@ -77,13 +81,13 @@ export function CreatePostForm() {
         </div>
       )}
 
-      <button
+      <Button
         type="submit"
         disabled={createPostMutation.isPending}
-        className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
+        className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400"
       >
         {createPostMutation.isPending ? "Creating..." : "Create Post"}
-      </button>
+      </Button>
     </form>
   );
 }
