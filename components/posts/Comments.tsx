@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePost } from "@/hooks/usePost";
+import type { Comment } from "@/lib/db/schemas";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useTinybase } from "@/providers/TinybaseProvider";
-import type { Comment } from "@/lib/db/schemas";
-import { usePost } from "@/hooks/usePost";
+import { useState } from "react";
 
 interface CommentsProps {
   postId: string;
@@ -17,60 +16,15 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
   const [error, setError] = useState("");
   const { user } = useAuthContext();
   const { isOnline } = useTinybase();
-  const queryClient = useQueryClient();
 
-  const { data, isLoading, createCommentMutation, deleteCommentMutation } =
-    usePost(postId);
-
-  // const createComment = useMutation({
-  //   mutationFn: async (content: string) => {
-  //     const token = localStorage.getItem("token");
-  //     const res = await fetch(`/api/posts/${postId}/comments`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify({ content }),
-  //     });
-
-  //     if (!res.ok) {
-  //       const error = await res.json();
-  //       throw new Error(error.message || "Failed to create comment");
-  //     }
-
-  //     return res.json();
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["post", postId] });
-  //     setContent("");
-  //   },
-  // });
-
-  // const deleteComment = useMutation({
-  //   mutationFn: async (commentId: string) => {
-  //     const token = localStorage.getItem("token");
-  //     const res = await fetch(
-  //       `/api/posts/${postId}/comments?commentId=${commentId}`,
-  //       {
-  //         method: "DELETE",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     if (!res.ok) {
-  //       const error = await res.json();
-  //       throw new Error(error.message || "Failed to delete comment");
-  //     }
-
-  //     return res.json();
-  //   },
-  //   onSuccess: () => {
-  //     queryClient.invalidateQueries({ queryKey: ["post", postId] });
-  //   },
-  // });
+  const {
+    data,
+    isLoading,
+    createCommentMutation,
+    createCommentOffline,
+    deleteCommentMutation,
+    deleteCommentOffline,
+  } = usePost(postId);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,8 +35,15 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
       return;
     }
 
+    if (!isOnline) {
+      createCommentOffline(content);
+      setContent("");
+      return;
+    }
+
     try {
       await createCommentMutation.mutateAsync(content);
+      setContent("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to post comment");
     }
@@ -91,6 +52,11 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
   const handleDelete = async (commentId: string) => {
     if (!window.confirm("Are you sure you want to delete this comment?"))
       return;
+
+    if (!isOnline) {
+      deleteCommentOffline(commentId);
+      return;
+    }
 
     try {
       await deleteCommentMutation.mutateAsync(commentId);
@@ -107,7 +73,6 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Comments</h2>
 
-      {/* Comment Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <textarea
@@ -137,7 +102,6 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
         </button>
       </form>
 
-      {/* Comments List */}
       <div className="space-y-4">
         {existingComments.map((comment) => (
           <div key={comment.id} className="bg-white p-4 rounded-lg shadow">

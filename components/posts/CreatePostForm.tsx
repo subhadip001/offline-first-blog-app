@@ -7,11 +7,18 @@ export function CreatePostForm() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
-  const { createPostMutation, isOnline } = usePosts();
+  const { createPostMutation, isOnline, createPostOffline } = usePosts();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!isOnline) {
+      createPostOffline({ title, content });
+      setTitle("");
+      setContent("");
+      return;
+    }
 
     try {
       await createPostMutation.mutateAsync({ title, content });

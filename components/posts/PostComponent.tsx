@@ -13,7 +13,8 @@ export default function PostComponent() {
   const router = useRouter();
   const { id } = useParams();
   const { isAuthenticated, user, loading } = useAuthContext();
-  const { deletePostMutation, canDeletePost, isOnline } = usePosts();
+  const { deletePostMutation, deletePostOffline, canDeletePost, isOnline } =
+    usePosts();
 
   // const { data, isLoading } = useQuery({
   //   queryKey: ["post", id as string],
@@ -52,7 +53,7 @@ export default function PostComponent() {
     );
   }
 
-  if (!data) {
+  if (!data || !data.post) {
     return (
       <div className="min-h-screen p-8">
         <div className="max-w-3xl mx-auto">
@@ -68,12 +69,17 @@ export default function PostComponent() {
     );
   }
 
-  console.log(data);
-
   const { post, comments } = data;
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
+
+    if (!isOnline) {
+      deletePostOffline(post.id);
+      router.push("/");
+      router.back();
+      return;
+    }
 
     try {
       await deletePostMutation.mutateAsync(post.id);
@@ -88,7 +94,7 @@ export default function PostComponent() {
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-start mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">{post.title}</h1>
+            <h1 className="text-3xl font-bold text-gray-900">{post?.title}</h1>
             {canDeletePost(post) && (
               <button
                 onClick={handleDelete}
@@ -100,11 +106,11 @@ export default function PostComponent() {
           </div>
 
           <div className="prose max-w-none">
-            <p className="text-gray-700 whitespace-pre-wrap">{post.content}</p>
+            <p className="text-gray-700 whitespace-pre-wrap">{post?.content}</p>
           </div>
 
           <div className="mt-6 text-sm text-gray-500">
-            Posted on: {new Date(post.createdAt).toLocaleDateString()}
+            Posted on: {new Date(post?.createdAt).toLocaleDateString()}
           </div>
         </div>
 

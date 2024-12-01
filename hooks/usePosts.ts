@@ -39,10 +39,15 @@ export function usePosts() {
   const getOfflinePosts = () => {
     if (!store) return [];
     const postsTable = store.getTable("posts");
-    return Object.entries(postsTable).map(([id, post]) => ({
-      id,
-      ...post,
-    }));
+    return Object.entries(postsTable)
+      .map(([id, post]) => ({
+        id,
+        ...post,
+      }))
+      .sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
   };
 
   const [offlinePosts, setOfflinePosts] = useState(getOfflinePosts());
@@ -89,18 +94,28 @@ export function usePosts() {
       store?.setRow("posts", createdPost.id, createdPost);
       return createdPost;
     } else {
-      store?.setRow("posts", newPost.id, newPost);
-
-      store?.setRow("pendingChanges", uuidv4(), {
-        type: "create",
-        table: "posts",
-        data: JSON.stringify(newPost),
-        id: newPost.id,
-        timestamp: Date.now(),
-      });
-
-      return newPost;
     }
+  };
+
+  const createPostOffline = async (postData: CreatePostData) => {
+    const newPost = {
+      ...postData,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: user?.id as string,
+    };
+    store?.setRow("posts", newPost.id, newPost);
+
+    store?.setRow("pendingChanges", uuidv4(), {
+      type: "create",
+      table: "posts",
+      data: JSON.stringify(newPost),
+      id: newPost.id,
+      timestamp: Date.now(),
+    });
+
+    return newPost;
   };
 
   const deletePost = async (postId: string) => {
@@ -120,18 +135,19 @@ export function usePosts() {
       store?.delRow("posts", postId);
       return res.json();
     } else {
-      console.log(postId);
-      store?.delRow("posts", postId);
-
-      store?.setRow("pendingChanges", uuidv4(), {
-        type: "delete",
-        table: "posts",
-        id: postId,
-        timestamp: Date.now(),
-      });
     }
   };
 
+  const deletePostOffline = async (postId: string) => {
+    store?.delRow("posts", postId);
+
+    store?.setRow("pendingChanges", uuidv4(), {
+      type: "delete",
+      table: "posts",
+      id: postId,
+      timestamp: Date.now(),
+    });
+  };
   const createPostMutation = useMutation({
     mutationFn: createPost,
     onSuccess: () => {
@@ -154,7 +170,9 @@ export function usePosts() {
     posts,
     isLoading: isOnlineLoading,
     createPostMutation,
+    createPostOffline,
     deletePostMutation,
+    deletePostOffline,
     canDeletePost,
     isOnline,
   };

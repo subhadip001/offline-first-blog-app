@@ -112,25 +112,28 @@ export function usePost(postId: string) {
 
       return res.json();
     } else {
-      const newComment: Comment = {
-        id: uuidv4(),
-        content,
-        postId,
-        createdAt: new Date().toISOString(),
-        authorId: user?.id as string,
-      };
-      store?.setRow("comments", newComment.id, newComment as unknown as Row);
-
-      store?.setRow("pendingChanges", uuidv4(), {
-        type: "create",
-        table: "comments",
-        data: newComment.content,
-        id: newComment.id,
-        postId,
-        timestamp: Date.now(),
-      });
-      return newComment;
     }
+  };
+
+  const createCommentOffline = async (content: string) => {
+    const newComment: Comment = {
+      id: uuidv4(),
+      content,
+      postId,
+      createdAt: new Date().toISOString(),
+      authorId: user?.id as string,
+    };
+    store?.setRow("comments", newComment.id, newComment as unknown as Row);
+
+    store?.setRow("pendingChanges", uuidv4(), {
+      type: "create",
+      table: "comments",
+      data: newComment.content,
+      id: newComment.id,
+      postId,
+      timestamp: Date.now(),
+    });
+    return newComment;
   };
 
   const deleteComment = async (commentId: string) => {
@@ -151,15 +154,18 @@ export function usePost(postId: string) {
         throw new Error(error.message || "Failed to delete comment");
       }
     } else {
-      store?.delRow("comments", commentId);
-      store?.setRow("pendingChanges", uuidv4(), {
-        type: "delete",
-        table: "comments",
-        id: commentId,
-        postId,
-        timestamp: Date.now(),
-      });
     }
+  };
+
+  const deleteCommentOffline = async (commentId: string) => {
+    store?.delRow("comments", commentId);
+    store?.setRow("pendingChanges", uuidv4(), {
+      type: "delete",
+      table: "comments",
+      id: commentId,
+      postId,
+      timestamp: Date.now(),
+    });
   };
 
   const createCommentMutation = useMutation({
@@ -184,6 +190,8 @@ export function usePost(postId: string) {
     isLoading,
     isOnline,
     createCommentMutation,
+    createCommentOffline,
     deleteCommentMutation,
+    deleteCommentOffline,
   };
 }

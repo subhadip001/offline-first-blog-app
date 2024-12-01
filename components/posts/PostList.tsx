@@ -10,6 +10,8 @@ export function PostList() {
     posts: data,
     isLoading,
     deletePostMutation,
+    deletePostOffline,
+    isOnline,
     canDeletePost,
   } = usePosts();
   const router = useRouter();
@@ -35,6 +37,9 @@ export function PostList() {
   const handleDelete = async (e: React.MouseEvent, postId: string) => {
     e.preventDefault(); // Prevent navigation when clicking delete
     if (window.confirm("Are you sure you want to delete this post?")) {
+      if (!isOnline) {
+        deletePostOffline(postId);
+      }
       try {
         await deletePostMutation.mutateAsync(postId);
       } catch (error) {
