@@ -151,15 +151,38 @@ export function usePosts(options: UsePostsOptions = {}) {
         throw new Error("Failed to delete post");
       }
 
+      // Delete post and its comments from local store
       store?.delRow("posts", postId);
+      const commentsTable = store?.getTable("comments");
+      if (commentsTable) {
+        Object.entries(commentsTable).forEach(([commentId, comment]) => {
+          if (comment.postId === postId) {
+            store?.delRow("comments", commentId);
+          }
+        });
+      }
+
       return res.json();
     } else {
+      throw new Error("Cannot delete post while offline");
     }
   };
 
   const deletePostOffline = async (postId: string) => {
+    // Delete the post
     store?.delRow("posts", postId);
 
+    // Delete all comments for this post
+    const commentsTable = store?.getTable("comments");
+    if (commentsTable) {
+      Object.entries(commentsTable).forEach(([commentId, comment]) => {
+        if (comment.postId === postId) {
+          store?.delRow("comments", commentId);
+        }
+      });
+    }
+
+    // Add pending change for post deletion
     store?.setRow("pendingChanges", uuidv4(), {
       type: "delete",
       table: "posts",
@@ -167,6 +190,7 @@ export function usePosts(options: UsePostsOptions = {}) {
       timestamp: Date.now(),
     });
   };
+
   const createPostMutation = useMutation({
     mutationFn: createPost,
     onSuccess: () => {
