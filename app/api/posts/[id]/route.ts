@@ -4,12 +4,12 @@ import { getPostsCollection, getCommentsCollection } from "@/lib/db/mongodb";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string | string[] | undefined }> }
 ) {
   try {
     const id = (await params).id;
     const collection = await getPostsCollection();
-    const post = await collection.findOne({ _id: new ObjectId(id) });
+    const post = await collection.findOne({ _id: new ObjectId(id as string) });
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -18,7 +18,7 @@ export async function GET(
     // Get comments for this post
     const commentsCollection = await getCommentsCollection();
     const comments = await commentsCollection
-      .find({ postId: new ObjectId(id) })
+      .find({ postId: new ObjectId(id as string) })
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -48,7 +48,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string | string[] | undefined }> }
 ) {
   try {
     const id = (await params).id;
@@ -56,7 +56,7 @@ export async function PUT(
     const userRole = request.headers.get("x-user-role");
 
     const collection = await getPostsCollection();
-    const post = await collection.findOne({ _id: new ObjectId(id) });
+    const post = await collection.findOne({ _id: new ObjectId(id as string) });
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -89,10 +89,10 @@ export async function PUT(
       },
     };
 
-    await collection.updateOne({ _id: new ObjectId(id) }, update);
+    await collection.updateOne({ _id: new ObjectId(id as string) }, update);
 
     const updatedPost = await collection.findOne({
-      _id: new ObjectId(id),
+      _id: new ObjectId(id as string),
     });
 
     return NextResponse.json({
@@ -114,7 +114,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string | string[] | undefined }> }
 ) {
   try {
     const id = (await params).id;
@@ -122,7 +122,7 @@ export async function DELETE(
     const userRole = request.headers.get("x-user-role");
 
     const collection = await getPostsCollection();
-    const post = await collection.findOne({ _id: new ObjectId(id) });
+    const post = await collection.findOne({ _id: new ObjectId(id as string) });
 
     if (!post) {
       return NextResponse.json({ error: "Post not found" }, { status: 404 });
@@ -135,10 +135,10 @@ export async function DELETE(
       );
     }
 
-    await collection.deleteOne({ _id: new ObjectId(id) });
+    await collection.deleteOne({ _id: new ObjectId(id as string) });
 
     const commentsCollection = await getCommentsCollection();
-    await commentsCollection.deleteMany({ postId: new ObjectId(id) });
+    await commentsCollection.deleteMany({ postId: new ObjectId(id as string) });
 
     return NextResponse.json({
       success: true,

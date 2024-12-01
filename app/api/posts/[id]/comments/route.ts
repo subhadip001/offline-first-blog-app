@@ -5,7 +5,7 @@ import type { DBComment } from "@/lib/db/schemas";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string | string[] | undefined }> }
 ) {
   try {
     const userId = request.headers.get("x-user-id");
@@ -27,7 +27,7 @@ export async function POST(
     const id = (await params).id;
 
     const comment: Omit<DBComment, "_id"> = {
-      postId: new ObjectId(id),
+      postId: new ObjectId(id as string),
       content: content.trim(),
       authorId: new ObjectId(userId),
       createdAt: new Date(),
@@ -59,7 +59,7 @@ export async function POST(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string | string[] | undefined }> }
 ) {
   try {
     const id = (await params).id;
@@ -77,7 +77,7 @@ export async function DELETE(
     const collection = await getCommentsCollection();
     const comment = await collection.findOne({
       _id: new ObjectId(commentId),
-      postId: new ObjectId(id),
+      postId: new ObjectId(id as string),
     });
 
     if (!comment) {

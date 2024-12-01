@@ -3,7 +3,7 @@ import { ObjectId } from "mongodb";
 import { getPostsCollection } from "@/lib/db/mongodb";
 import { DBPost } from "@/lib/db/schemas";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const collection = await getPostsCollection();
     const posts = await collection.find({}).sort({ createdAt: -1 }).toArray();

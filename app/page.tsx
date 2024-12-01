@@ -2,7 +2,6 @@
 
 import { CreatePostForm } from "@/components/posts/CreatePostForm";
 import { PostList } from "@/components/posts/PostList";
-import { SyncIndicator } from "@/components/ui/SyncIndicator";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import { useRouter } from "next/navigation";
