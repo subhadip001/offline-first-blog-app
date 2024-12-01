@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import DeleteButton from "../common/DeleteButton";
 import { Pagination } from "../common/Pagination";
-import { Card } from "../ui/card";
+import { Card } from "@/components/ui/card";
 import UserName from "../common/UserName";
 
 export function PostList() {

@@ -4,8 +4,8 @@ import { useAuthContext } from "@/providers/AuthProvider";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Button } from "../ui/button";
-import { SyncIndicator } from "../ui/SyncIndicator";
+import { Button } from "@/components/ui/button";
+import { SyncIndicator } from "@/components/ui/SyncIndicator";
 
 export default function Header() {
   const { user, isAuthenticated, logout, loading } = useAuthContext();

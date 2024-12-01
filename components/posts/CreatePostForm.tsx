@@ -2,9 +2,9 @@
 
 import { usePosts } from "@/hooks/usePosts";
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export function CreatePostForm() {
   const [title, setTitle] = useState("");
