@@ -7,6 +7,7 @@ import { useAuthContext } from "@/providers/AuthProvider";
 import { fetchPostById } from "@/lib/queries";
 import { useEffect } from "react";
 import { Comments } from "./Comments";
+import { usePost } from "@/hooks/usePost";
 
 export default function PostComponent() {
   const router = useRouter();
@@ -14,11 +15,13 @@ export default function PostComponent() {
   const { isAuthenticated, user, loading } = useAuthContext();
   const { deletePostMutation, canDeletePost, isOnline } = usePosts();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["post", id as string],
-    queryFn: () => fetchPostById(id as string),
-    enabled: !!id && isOnline,
-  });
+  // const { data, isLoading } = useQuery({
+  //   queryKey: ["post", id as string],
+  //   queryFn: () => fetchPostById(id as string),
+  //   enabled: !!id && isOnline,
+  // });
+
+  const { data, isLoading } = usePost(id as string);
 
   useEffect(() => {
     if (!loading && !isAuthenticated()) {
@@ -65,6 +68,8 @@ export default function PostComponent() {
     );
   }
 
+  console.log(data);
+
   const { post, comments } = data;
 
   const handleDelete = async () => {
@@ -79,7 +84,7 @@ export default function PostComponent() {
   };
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50">
+    <div className="min-h-screen p-8 bg-gray-">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex justify-between items-start mb-4">

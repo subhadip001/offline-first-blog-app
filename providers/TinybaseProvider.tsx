@@ -123,41 +123,91 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
               const token = localStorage.getItem("token");
               let response;
 
-              switch (change.type) {
-                case "create":
-                  response = await fetch(`/api/${change.table}`, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: change.data as string,
-                  });
+              if (change.table === "posts") {
+                switch (change.type) {
+                  case "create":
+                    response = await fetch(`/api/${change.table}`, {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: change.data as string,
+                    });
 
-                  if (response.ok) {
+                    if (response.ok) {
+                      store?.delRow("posts", change.id as string);
+                    }
+                    break;
+
+                  case "update":
+                    response = await fetch(
+                      `/api/${change.table}/${change.id}`,
+                      {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(change.data),
+                      }
+                    );
+                    break;
+
+                  case "delete":
                     store?.delRow("posts", change.id as string);
-                  }
-                  break;
 
-                case "update":
-                  response = await fetch(`/api/${change.table}/${change.id}`, {
-                    method: "PUT",
-                    headers: {
-                      "Content-Type": "application/json",
-                      Authorization: `Bearer ${token}`,
-                    },
-                    body: JSON.stringify(change.data),
-                  });
-                  break;
+                    response = await fetch(
+                      `/api/${change.table}/${change.id}`,
+                      {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }
+                    );
+                    break;
+                }
+              } else if (change.table === "comments") {
+                console.log(change);
+                switch (change.type) {
+                  case "create":
+                    const content = change.data;
+                    response = await fetch(
+                      `/api/posts/${change.postId}/${change.table}`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ content }),
+                      }
+                    );
+                    break;
 
-                case "delete":
-                  store?.delRow("posts", change.id as string);
+                  case "update":
+                    response = await fetch(
+                      `/api/posts/${change.postId}/${change.table}?commentId=${change.id}`,
+                      {
+                        method: "PUT",
+                        headers: {
+                          "Content-Type": "application/json",
+                          Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify(change.data),
+                      }
+                    );
+                    break;
 
-                  response = await fetch(`/api/${change.table}/${change.id}`, {
-                    method: "DELETE",
-                    headers: { Authorization: `Bearer ${token}` },
-                  });
-                  break;
+                  case "delete":
+                    response = await fetch(
+                      `/api/posts/${change.postId}/${change.table}?commentId=${change.id}`,
+                      {
+                        method: "DELETE",
+                        headers: { Authorization: `Bearer ${token}` },
+                      }
+                    );
+                    break;
+                }
               }
 
               if (!response?.ok) {

@@ -5,64 +5,64 @@ export type CreatePostData = {
   content: string;
 };
 
-export interface Post {
+export type Post = {
   id: string;
   title: string;
   content: string;
   authorId: string;
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface Comment {
+export type Comment = {
   id: string;
   postId: string;
   content: string;
   authorId: string;
   createdAt: string;
-}
+};
 
-export interface PendingChange {
+export type PendingChange = {
   type: "create" | "update" | "delete";
   table: "posts" | "comments";
   id: string;
   data?: any;
   timestamp: number;
-}
+};
 
 // TinyBase tables structure
-export interface TableData {
+export type TableData = {
   posts: Record<string, Post>;
   comments: Record<string, Comment>;
   pendingChanges: Record<string, PendingChange>;
-}
+};
 
 // TinyBase store values
-export interface StoreValues {
+export type StoreValues = {
   lastSync: number;
   isOnline: boolean;
-}
+};
 
 export type BlogStore = Store;
 
 export type UserRole = "admin" | "user";
 
-export interface User {
+export type User = {
   id: string;
   username: string;
   role: UserRole;
-}
+};
 
-export interface AuthResponse {
+export type AuthResponse = {
   token: string;
   user: User;
-}
+};
 
 // API Response types
-export interface ApiResponse<T> {
+export type ApiResponse<T> = {
   data?: T;
   error?: string;
-}
+};
 
 export interface PostsResponse extends ApiResponse<Post[]> {}
 export interface PostResponse extends ApiResponse<Post> {}

@@ -5,6 +5,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import type { Comment } from "@/lib/db/schemas";
+import { usePost } from "@/hooks/usePost";
 
 interface CommentsProps {
   postId: string;
@@ -18,55 +19,58 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
   const { isOnline } = useTinybase();
   const queryClient = useQueryClient();
 
-  const createComment = useMutation({
-    mutationFn: async (content: string) => {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`/api/posts/${postId}/comments`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ content }),
-      });
+  const { data, isLoading, createCommentMutation, deleteCommentMutation } =
+    usePost(postId);
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to create comment");
-      }
+  // const createComment = useMutation({
+  //   mutationFn: async (content: string) => {
+  //     const token = localStorage.getItem("token");
+  //     const res = await fetch(`/api/posts/${postId}/comments`, {
+  //       method: "POST",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({ content }),
+  //     });
 
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["post", postId] });
-      setContent("");
-    },
-  });
+  //     if (!res.ok) {
+  //       const error = await res.json();
+  //       throw new Error(error.message || "Failed to create comment");
+  //     }
 
-  const deleteComment = useMutation({
-    mutationFn: async (commentId: string) => {
-      const token = localStorage.getItem("token");
-      const res = await fetch(
-        `/api/posts/${postId}/comments?commentId=${commentId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+  //     return res.json();
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["post", postId] });
+  //     setContent("");
+  //   },
+  // });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to delete comment");
-      }
+  // const deleteComment = useMutation({
+  //   mutationFn: async (commentId: string) => {
+  //     const token = localStorage.getItem("token");
+  //     const res = await fetch(
+  //       `/api/posts/${postId}/comments?commentId=${commentId}`,
+  //       {
+  //         method: "DELETE",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
 
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["post", postId] });
-    },
-  });
+  //     if (!res.ok) {
+  //       const error = await res.json();
+  //       throw new Error(error.message || "Failed to delete comment");
+  //     }
+
+  //     return res.json();
+  //   },
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["post", postId] });
+  //   },
+  // });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +82,7 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
     }
 
     try {
-      await createComment.mutateAsync(content);
+      await createCommentMutation.mutateAsync(content);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to post comment");
     }
@@ -89,7 +93,7 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
       return;
 
     try {
-      await deleteComment.mutateAsync(commentId);
+      await deleteCommentMutation.mutateAsync(commentId);
     } catch (error) {
       console.error("Failed to delete comment:", error);
     }
@@ -101,7 +105,7 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Comments</h2>
+      <h2 className="text-2xl font-bold">Comments</h2>
 
       {/* Comment Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -111,7 +115,7 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
             onChange={(e) => setContent(e.target.value)}
             placeholder="Add a comment..."
             rows={3}
-            className="w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            className="w-full rounded-lg border-gray-300 text-black shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
           />
         </div>
 
@@ -126,10 +130,10 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
 
         <button
           type="submit"
-          disabled={createComment.isPending}
+          disabled={createCommentMutation.isPending}
           className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:bg-indigo-400"
         >
-          {createComment.isPending ? "Posting..." : "Post Comment"}
+          {createCommentMutation.isPending ? "Posting..." : "Post Comment"}
         </button>
       </form>
 
