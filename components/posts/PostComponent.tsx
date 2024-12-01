@@ -12,11 +12,12 @@ export default function PostComponent() {
   const router = useRouter();
   const { id } = useParams();
   const { isAuthenticated, user, loading } = useAuthContext();
-  const { deletePostMutation, canDeletePost } = usePosts();
+  const { deletePostMutation, canDeletePost, isOnline } = usePosts();
 
   const { data, isLoading } = useQuery({
     queryKey: ["post", id as string],
     queryFn: () => fetchPostById(id as string),
+    enabled: !!id && isOnline,
   });
 
   useEffect(() => {

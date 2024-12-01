@@ -3,23 +3,74 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import { useAuthContext } from "@/providers/AuthProvider";
-import type { Post } from "@/lib/db/schemas";
 import { fetchPosts, QueryKeys } from "@/lib/queries";
-import { CreatePostData } from "@/lib/types";
+import { CreatePostData, Post } from "@/lib/types";
+import { v4 as uuidv4 } from "uuid";
+import { useEffect, useState } from "react";
+import { Row } from "tinybase";
 
 export function usePosts() {
   const { store, isOnline } = useTinybase();
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
 
-  const { data: posts, isLoading } = useQuery({
+  const { data: onlinePosts, isLoading: isOnlineLoading } = useQuery({
     queryKey: [QueryKeys.POSTS],
     queryFn: fetchPosts,
-    enabled: isOnline, // Only fetch when online
+    enabled: isOnline,
+    refetchOnWindowFocus: false,
   });
 
-  const createPostMutation = useMutation({
-    mutationFn: async (postData: CreatePostData) => {
+  useEffect(() => {
+    if (store && onlinePosts?.posts && isOnline) {
+      const pendingChanges = store.getTable("pendingChanges");
+      const pendingDeletes = Object.values(pendingChanges)
+        .filter((change) => change.type === "delete")
+        .map((change) => change.id);
+
+      onlinePosts?.posts?.forEach((post: Post) => {
+        if (!pendingDeletes.includes(post.id)) {
+          store.setRow("posts", post.id, post as unknown as Row);
+        }
+      });
+    }
+  }, [store, onlinePosts, isOnline]);
+
+  const getOfflinePosts = () => {
+    if (!store) return [];
+    const postsTable = store.getTable("posts");
+    return Object.entries(postsTable).map(([id, post]) => ({
+      id,
+      ...post,
+    }));
+  };
+
+  const [offlinePosts, setOfflinePosts] = useState(getOfflinePosts());
+
+  useEffect(() => {
+    if (!store) return;
+
+    const listenerId = store.addTableListener("posts", () => {
+      setOfflinePosts(getOfflinePosts());
+    });
+
+    return () => {
+      store.delListener(listenerId);
+    };
+  }, [store]);
+
+  const posts = isOnline ? onlinePosts : { posts: offlinePosts };
+
+  const createPost = async (postData: CreatePostData) => {
+    const newPost = {
+      ...postData,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      authorId: user?.id as string,
+    };
+
+    if (isOnline) {
       const token = localStorage.getItem("token");
       const res = await fetch("/api/posts", {
         method: "POST",
@@ -31,19 +82,29 @@ export function usePosts() {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to create post");
+        throw new Error("Failed to create post");
       }
 
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [QueryKeys.POSTS] });
-    },
-  });
+      const createdPost = await res.json();
+      store?.setRow("posts", createdPost.id, createdPost);
+      return createdPost;
+    } else {
+      store?.setRow("posts", newPost.id, newPost);
 
-  const deletePostMutation = useMutation({
-    mutationFn: async (postId: string) => {
+      store?.setRow("pendingChanges", uuidv4(), {
+        type: "create",
+        table: "posts",
+        data: JSON.stringify(newPost),
+        id: newPost.id,
+        timestamp: Date.now(),
+      });
+
+      return newPost;
+    }
+  };
+
+  const deletePost = async (postId: string) => {
+    if (isOnline) {
       const token = localStorage.getItem("token");
       const res = await fetch(`/api/posts/${postId}`, {
         method: "DELETE",
@@ -53,14 +114,35 @@ export function usePosts() {
       });
 
       if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to delete post");
+        throw new Error("Failed to delete post");
       }
 
+      store?.delRow("posts", postId);
       return res.json();
-    },
+    } else {
+      console.log(postId);
+      store?.delRow("posts", postId);
+
+      store?.setRow("pendingChanges", uuidv4(), {
+        type: "delete",
+        table: "posts",
+        id: postId,
+        timestamp: Date.now(),
+      });
+    }
+  };
+
+  const createPostMutation = useMutation({
+    mutationFn: createPost,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.POSTS] });
+    },
+  });
+
+  const deletePostMutation = useMutation({
+    mutationFn: deletePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.POSTS] });
     },
   });
 
@@ -70,7 +152,7 @@ export function usePosts() {
 
   return {
     posts,
-    isLoading,
+    isLoading: isOnlineLoading,
     createPostMutation,
     deletePostMutation,
     canDeletePost,

@@ -2,6 +2,7 @@
 
 import { CreatePostForm } from "@/components/posts/CreatePostForm";
 import { PostList } from "@/components/posts/PostList";
+import { SyncIndicator } from "@/components/ui/SyncIndicator";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import { useRouter } from "next/navigation";
@@ -36,6 +37,7 @@ export default function Home() {
             <span className="text-sm">
               Status: {isOnline ? "Online" : "Offline"}
             </span>
+            {/* <SyncIndicator /> */}
             {user && (
               <div className="flex items-center gap-4">
                 <span className="text-sm">Welcome, {user.username}</span>

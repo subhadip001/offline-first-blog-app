@@ -8,17 +8,21 @@ import {
 } from "react";
 import { createStore } from "tinybase";
 import type { BlogStore } from "@/lib/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { QueryKeys } from "@/lib/queries";
 
 interface TinybaseContextType {
   store: BlogStore | null;
   isOnline: boolean;
   lastSync: Date | null;
+  syncError: string | null;
 }
 
 const TinybaseContext = createContext<TinybaseContextType>({
   store: null,
   isOnline: true,
   lastSync: null,
+  syncError: null,
 });
 
 export function TinybaseProvider({ children }: { children: ReactNode }) {
@@ -27,13 +31,15 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
     typeof window !== "undefined" ? navigator.onLine : true
   );
   const [lastSync, setLastSync] = useState<Date | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     const newStore = createStore();
 
-    // Initialize tables with default empty records
     newStore.setTables({
       posts: {},
       comments: {},
@@ -42,13 +48,12 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
 
     const currentTime = Date.now();
 
-    // Initialize values
     newStore.setValues({
       lastSync: currentTime,
       isOnline: navigator.onLine,
+      syncError: "",
     });
 
-    // Load persisted data
     const persistedData = localStorage.getItem("offlineBlogData");
     if (persistedData) {
       try {
@@ -58,7 +63,6 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Set up persistence using tablesListener
     newStore.addTablesListener(() => {
       try {
         localStorage.setItem("offlineBlogData", newStore.getJson());
@@ -67,7 +71,6 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Also listen for value changes
     newStore.addValuesListener(() => {
       try {
         localStorage.setItem("offlineBlogData", newStore.getJson());
@@ -80,11 +83,9 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Set up online/offline detection
     const handleOnline = () => {
       setIsOnline(true);
       newStore.setValue("isOnline", true);
-      // Trigger sync when coming online
       syncPendingChanges(newStore);
     };
 
@@ -97,7 +98,7 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
     window.addEventListener("offline", handleOffline);
 
     setStore(newStore);
-    setLastSync(new Date(currentTime)); // Use the currentTime we set initially
+    setLastSync(new Date(currentTime));
 
     return () => {
       window.removeEventListener("online", handleOnline);
@@ -105,53 +106,94 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // Function to sync pending changes when coming online
   const syncPendingChanges = async (store: BlogStore) => {
     const pendingChanges = store.getTable("pendingChanges");
+    const sortedChanges = Object.entries(pendingChanges).sort(
+      ([, a], [, b]) => (a.timestamp as number) - (b.timestamp as number)
+    );
 
-    for (const [changeId, change] of Object.entries(pendingChanges)) {
+    const batchSize = 5;
+    for (let i = 0; i < sortedChanges.length; i += batchSize) {
+      const batch = sortedChanges.slice(i, i + batchSize);
+
       try {
-        switch (change.type) {
-          case "create":
-            await fetch(`/api/${change.table}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(change.data),
-            });
-            break;
+        await Promise.all(
+          batch.map(async ([changeId, change]) => {
+            try {
+              const token = localStorage.getItem("token");
+              let response;
 
-          case "update":
-            await fetch(`/api/${change.table}/${change.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(change.data),
-            });
-            break;
+              switch (change.type) {
+                case "create":
+                  response = await fetch(`/api/${change.table}`, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: change.data as string,
+                  });
 
-          case "delete":
-            await fetch(`/api/${change.table}/${change.id}`, {
-              method: "DELETE",
-            });
-            break;
-        }
+                  if (response.ok) {
+                    store?.delRow("posts", change.id as string);
+                  }
+                  break;
 
-        // Remove synced change
-        store.delRow("pendingChanges", changeId);
+                case "update":
+                  response = await fetch(`/api/${change.table}/${change.id}`, {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(change.data),
+                  });
+                  break;
+
+                case "delete":
+                  store?.delRow("posts", change.id as string);
+
+                  response = await fetch(`/api/${change.table}/${change.id}`, {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` },
+                  });
+                  break;
+              }
+
+              if (!response?.ok) {
+                throw new Error(`Failed to sync ${change.type} operation`);
+              }
+
+              store.delRow("pendingChanges", changeId);
+              setSyncError(null);
+            } catch (error) {
+              console.error(`Failed to sync change ${changeId}:`, error);
+              setSyncError(
+                `Failed to sync some changes. Will retry when online.`
+              );
+            }
+          })
+        );
+
+        const currentTime = Date.now();
+        store.setValue("lastSync", currentTime);
+        setLastSync(new Date(currentTime));
       } catch (error) {
-        console.error(`Failed to sync change ${changeId}:`, error);
+        console.error("Batch sync failed:", error);
+        setSyncError("Sync failed. Will retry when online.");
       }
     }
 
-    const currentTime = Date.now();
-    // Update last sync timestamp
-    store.setValue("lastSync", currentTime);
-    setLastSync(new Date(currentTime));
+    queryClient.invalidateQueries({
+      queryKey: [QueryKeys.POSTS],
+    });
   };
 
   const value = {
     store,
     isOnline,
     lastSync,
+    syncError,
   };
 
   return (

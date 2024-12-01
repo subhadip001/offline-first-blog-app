@@ -2,6 +2,7 @@ import { CreatePostData } from "./types";
 
 export enum QueryKeys {
   POSTS = "posts",
+  POST = "post",
 }
 
 const getAccessToken = () => {
