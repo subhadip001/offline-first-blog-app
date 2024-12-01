@@ -3,10 +3,18 @@ import { ObjectId } from "mongodb";
 import { getPostsCollection } from "@/lib/db/mongodb";
 import { DBPost } from "@/lib/db/schemas";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "3");
+    const skip = (page - 1) * limit;
+
     const collection = await getPostsCollection();
-    const posts = await collection.find({}).sort({ createdAt: -1 }).toArray();
+    const [posts, total] = await Promise.all([
+      collection.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit).toArray(),
+      collection.countDocuments({}),
+    ]);
 
     return NextResponse.json({
       posts: posts.map((post) => ({
@@ -15,6 +23,7 @@ export async function GET() {
         authorId: post.authorId.toString(),
         _id: undefined,
       })),
+      total,
     });
   } catch (error) {
     console.error("Failed to fetch posts:", error);

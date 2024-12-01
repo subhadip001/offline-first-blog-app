@@ -39,8 +39,17 @@ const postData = async (url: string, data: any) => {
   return res.json();
 };
 
-export const fetchPosts = () => {
-  return fechData("/api/posts");
+interface FetchPostsOptions {
+  page?: number;
+  limit?: number;
+}
+
+export const fetchPosts = ({ page = 1, limit = 3 }: FetchPostsOptions = {}) => {
+  const queryParams = new URLSearchParams({
+    page: page.toString(),
+    limit: limit.toString(),
+  });
+  return fechData(`/api/posts?${queryParams}`);
 };
 
 export const fetchPostById = async (postId: string) => {

@@ -9,14 +9,20 @@ import { v4 as uuidv4 } from "uuid";
 import { useEffect, useState } from "react";
 import { Row } from "tinybase";
 
-export function usePosts() {
+interface UsePostsOptions {
+  page?: number;
+  limit?: number;
+}
+
+export function usePosts(options: UsePostsOptions = {}) {
+  const { page = 1, limit = 3 } = options;
   const { store, isOnline } = useTinybase();
   const { user } = useAuthContext();
   const queryClient = useQueryClient();
 
   const { data: onlinePosts, isLoading: isOnlineLoading } = useQuery({
-    queryKey: [QueryKeys.POSTS],
-    queryFn: fetchPosts,
+    queryKey: [QueryKeys.POSTS, page, limit],
+    queryFn: () => fetchPosts({ page, limit }),
     enabled: isOnline,
     refetchOnWindowFocus: false,
   });
@@ -37,9 +43,9 @@ export function usePosts() {
   }, [store, onlinePosts, isOnline]);
 
   const getOfflinePosts = () => {
-    if (!store) return [];
+    if (!store) return { posts: [], total: 0 };
     const postsTable = store.getTable("posts");
-    return Object.entries(postsTable)
+    const allPosts = Object.entries(postsTable)
       .map(([id, post]) => ({
         id,
         ...post,
@@ -48,6 +54,14 @@ export function usePosts() {
         (a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
+
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+
+    return {
+      posts: allPosts.slice(startIndex, endIndex),
+      total: allPosts.length,
+    };
   };
 
   const [offlinePosts, setOfflinePosts] = useState(getOfflinePosts());
@@ -55,16 +69,21 @@ export function usePosts() {
   useEffect(() => {
     if (!store) return;
 
-    const listenerId = store.addTableListener("posts", () => {
+    const updateOfflinePosts = () => {
       setOfflinePosts(getOfflinePosts());
-    });
+    };
+
+    // Update when store changes
+    const listenerId = store.addTableListener("posts", updateOfflinePosts);
+    // Update when page or limit changes
+    updateOfflinePosts();
 
     return () => {
       store.delListener(listenerId);
     };
-  }, [store]);
+  }, [store, page, limit]);
 
-  const posts = isOnline ? onlinePosts : { posts: offlinePosts };
+  const posts = isOnline ? onlinePosts : offlinePosts;
 
   const createPost = async (postData: CreatePostData) => {
     const newPost = {
