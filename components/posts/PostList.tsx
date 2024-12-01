@@ -8,6 +8,7 @@ import { useState } from "react";
 import DeleteButton from "../common/DeleteButton";
 import { Pagination } from "../common/Pagination";
 import { Card } from "../ui/card";
+import UserName from "../common/UserName";
 
 export function PostList() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,9 +67,18 @@ export function PostList() {
           <Card
             onClick={() => router.push(`/posts/${post.id}`)}
             key={post.id}
-            className="block cursor-pointer bg-white rounded-lg p-6 hover:shadow-md transition-shadow"
+            className="p-4 cursor-pointer"
           >
             <article>
+              <div className="mb-4">
+                <div className="text-gray-500 flex items-center gap-2">
+                  <UserName userId={post.authorId} />
+                  <span className=" text-xs">
+                    {formatRelativeTime(new Date(post.createdAt))}
+                  </span>
+                </div>
+              </div>
+
               <div className="flex justify-between items-start">
                 <h2 className="text-xl font-bold text-gray-900">
                   {post.title}
@@ -79,7 +89,6 @@ export function PostList() {
               </div>
               <p className="mt-2 text-gray-600 line-clamp-1">{post.content}</p>
               <div className="mt-4 flex justify-between items-center text-sm text-gray-500">
-                <span>{formatRelativeTime(new Date(post.createdAt))}</span>
                 <span className="text-blue-600">Read more</span>
               </div>
             </article>

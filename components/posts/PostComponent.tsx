@@ -9,6 +9,7 @@ import { useEffect } from "react";
 import DeleteButton from "../common/DeleteButton";
 import Header from "../common/Header";
 import { Comments } from "./Comments";
+import UserName from "../common/UserName";
 
 export default function PostComponent() {
   const router = useRouter();
@@ -95,18 +96,20 @@ export default function PostComponent() {
     <div className="min-h-screen p-8 ">
       <Header />
       <div className="">
-        <div className="bg-white rounded-lg border p-6">
-          <div className="flex justify-between items-start mb-4">
+        <div className="bg-white rounded-md border p-6">
+          <div className="text-gray-500 flex items-center gap-2">
+            <UserName userId={post.authorId} />
+            <span className=" text-xs">
+              {formatRelativeTime(new Date(post.createdAt))}
+            </span>
+          </div>
+          <div className="flex justify-between items-start my-4">
             <h1 className="text-3xl font-bold text-gray-900">{post?.title}</h1>
             {canDeletePost(post) && <DeleteButton handleClick={handleDelete} />}
           </div>
 
           <div className="prose max-w-none">
             <p className="text-gray-700 whitespace-pre-wrap">{post?.content}</p>
-          </div>
-
-          <div className="mt-6 text-sm text-gray-500">
-            <span>{formatRelativeTime(new Date(post.createdAt))}</span>
           </div>
         </div>
 

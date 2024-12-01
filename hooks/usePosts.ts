@@ -86,14 +86,6 @@ export function usePosts(options: UsePostsOptions = {}) {
   const posts = isOnline ? onlinePosts : offlinePosts;
 
   const createPost = async (postData: CreatePostData) => {
-    const newPost = {
-      ...postData,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      authorId: user?.id as string,
-    };
-
     if (isOnline) {
       const token = localStorage.getItem("token");
       const res = await fetch("/api/posts", {

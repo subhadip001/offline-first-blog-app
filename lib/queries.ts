@@ -61,3 +61,8 @@ export const createPost = (data: CreatePostData) => {
   const res = postData("/api/posts", data);
   return res;
 };
+
+export const getUserById = async (userId: string) => {
+  const response = await fechData(`/api/users?userId=${userId}`);
+  return response;
+};

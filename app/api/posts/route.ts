@@ -12,7 +12,12 @@ export async function GET(request: NextRequest) {
 
     const collection = await getPostsCollection();
     const [posts, total] = await Promise.all([
-      collection.find({}).sort({ createdAt: -1 }).skip(skip).limit(limit).toArray(),
+      collection
+        .find({})
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
       collection.countDocuments({}),
     ]);
 

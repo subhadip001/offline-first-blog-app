@@ -9,6 +9,7 @@ import { Textarea } from "../ui/textarea";
 import { Button } from "../ui/button";
 import DeleteButton from "../common/DeleteButton";
 import { formatRelativeTime } from "@/lib/utils";
+import UserName from "../common/UserName";
 
 interface CommentsProps {
   postId: string;
@@ -110,14 +111,17 @@ export function Comments({ postId, existingComments = [] }: CommentsProps) {
       <div className="space-y-4">
         {existingComments.map((comment) => (
           <div key={comment.id} className="bg-white p-4 rounded-md border">
-            <div className="flex justify-between items-start">
+            <div className="text-gray-500 flex items-center gap-2">
+              <UserName userId={comment.authorId} />
+              <span className=" text-xs">
+                {formatRelativeTime(new Date(comment.createdAt))}
+              </span>
+            </div>
+            <div className="flex justify-between items-start py-2">
               <p className="text-gray-700">{comment.content}</p>
               {canDeleteComment(comment) && (
                 <DeleteButton handleClick={() => handleDelete(comment.id)} />
               )}
-            </div>
-            <div className="mt-2 text-sm text-gray-500">
-              {formatRelativeTime(new Date(comment.createdAt))}
             </div>
           </div>
         ))}
