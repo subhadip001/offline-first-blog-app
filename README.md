@@ -62,7 +62,7 @@ A modern blog application built with Next.js that prioritizes offline functional
 - Improved UX and UI
 - Improving the lastsync feature
 - Removing Auth to View Posts and Comments
-- Adding more features
+- Dockerizing the app
 
 ## Getting Started
 
