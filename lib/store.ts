@@ -119,7 +119,7 @@ async function processSingleChange(
 
     case "update":
       response = await fetch(`${baseUrl}/${id}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });

@@ -5,6 +5,12 @@ export type CreatePostData = {
   content: string;
 };
 
+export type UpdatePostData = {
+  id: string;
+  title: string;
+  content: string;
+};
+
 export type Post = {
   id: string;
   title: string;

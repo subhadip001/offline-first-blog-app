@@ -39,6 +39,20 @@ const postData = async (url: string, data: any) => {
   return res.json();
 };
 
+const patchData = async (url: string, data: any) => {
+  const token = getAccessToken();
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error("Failed to fetch data");
+  return res.json();
+};
+
 interface FetchPostsOptions {
   page?: number;
   limit?: number;
@@ -66,3 +80,4 @@ export const getUserById = async (userId: string) => {
   const response = await fechData(`/api/users?userId=${userId}`);
   return response;
 };
+

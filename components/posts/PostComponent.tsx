@@ -10,13 +10,19 @@ import DeleteButton from "../common/DeleteButton";
 import Header from "../common/Header";
 import { Comments } from "./Comments";
 import UserName from "../common/UserName";
+import { UpdatePostDialog } from "./UpdatePostDialog";
 
 export default function PostComponent() {
   const router = useRouter();
   const { id } = useParams();
   const { isAuthenticated, user, loading } = useAuthContext();
-  const { deletePostMutation, deletePostOffline, canDeletePost, isOnline } =
-    usePosts();
+  const {
+    deletePostMutation,
+    deletePostOffline,
+    canDeletePost,
+    canEditPost,
+    isOnline,
+  } = usePosts();
 
   const { data, isLoading } = usePost(id as string);
 
@@ -105,7 +111,12 @@ export default function PostComponent() {
           </div>
           <div className="flex justify-between items-start my-4">
             <h1 className="text-3xl font-bold text-gray-900">{post?.title}</h1>
-            {canDeletePost(post) && <DeleteButton handleClick={handleDelete} />}
+            <div className="flex items-center space-x-2">
+              {canEditPost(post) && <UpdatePostDialog post={post} />}
+              {canDeletePost(post) && (
+                <DeleteButton handleClick={handleDelete} />
+              )}
+            </div>
           </div>
 
           <div className="prose max-w-none">

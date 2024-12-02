@@ -144,7 +144,7 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
                     response = await fetch(
                       `/api/${change.table}/${change.id}`,
                       {
-                        method: "PUT",
+                        method: "PATCH",
                         headers: {
                           "Content-Type": "application/json",
                           Authorization: `Bearer ${token}`,
@@ -188,7 +188,7 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
                     response = await fetch(
                       `/api/posts/${change.postId}/${change.table}?commentId=${change.id}`,
                       {
-                        method: "PUT",
+                        method: "PATCH",
                         headers: {
                           "Content-Type": "application/json",
                           Authorization: `Bearer ${token}`,

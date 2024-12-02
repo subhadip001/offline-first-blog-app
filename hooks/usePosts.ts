@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTinybase } from "@/providers/TinybaseProvider";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { fetchPosts, QueryKeys } from "@/lib/queries";
-import { CreatePostData, Post } from "@/lib/types";
+import { CreatePostData, Post, UpdatePostData } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
 import { useEffect, useState } from "react";
 import { Row } from "tinybase";
@@ -183,6 +183,49 @@ export function usePosts(options: UsePostsOptions = {}) {
     });
   };
 
+  const updatePost = async (postData: UpdatePostData) => {
+    if (isOnline) {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`/api/posts/${postData.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(postData),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to create post");
+      }
+
+      const createdPost = await res.json();
+      store?.setRow("posts", createdPost.id, createdPost);
+      return createdPost;
+    } else {
+    }
+  };
+
+  // const updatePostOffline = async (postData: UpdatePostData) => {
+  //   const offlineData = await getOfflinePosts();
+  //   const updatedPosts = offlineData.posts.map((post) =>
+  //     post.id === postData.id
+  //       ? { ...post, ...postData, updatedAt: new Date().toISOString() }
+  //       : post
+  //   );
+
+  //   await setOfflinePosts({
+  //     ...offlineData,
+  //     posts: updatedPosts,
+  //     pendingUpdates: [
+  //       ...offlineData.pendingUpdates,
+  //       { type: "UPDATE", data: postData },
+  //     ],
+  //   });
+
+  //   queryClient.setQueryData<Post[]>(["posts"], updatedPosts);
+  // };
+
   const createPostMutation = useMutation({
     mutationFn: createPost,
     onSuccess: () => {
@@ -197,7 +240,21 @@ export function usePosts(options: UsePostsOptions = {}) {
     },
   });
 
+  const updatePostMutation = useMutation({
+    mutationFn: updatePost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [QueryKeys.POST] });
+    },
+    onError: (error) => {
+      console.error(error.message);
+    },
+  });
+
   const canDeletePost = (post: Post) => {
+    return user?.role === "admin" || post.authorId === user?.id;
+  };
+
+  const canEditPost = (post: Post) => {
     return user?.role === "admin" || post.authorId === user?.id;
   };
 
@@ -208,7 +265,10 @@ export function usePosts(options: UsePostsOptions = {}) {
     createPostOffline,
     deletePostMutation,
     deletePostOffline,
+    updatePostMutation,
+    // updatePostOffline,
     canDeletePost,
+    canEditPost,
     isOnline,
   };
 }
