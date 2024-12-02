@@ -61,6 +61,7 @@ A modern blog application built with Next.js that prioritizes offline functional
 - Implementing pagination and edit for comments
 - Improved UX and UI
 - Improving the lastsync feature
+- Removing Auth to View Posts and Comments
 - Adding more features
 
 ## Getting Started
@@ -93,7 +94,7 @@ Admin credentials:
 ## Features
 
 - User authentication and authorization
-- Create, read, and delete blog posts
-- Offline content creation and deletion
+- Create, read, update delete blog posts
+- Offline content creation, update, and deletion
 - Automatic synchronization
 - Responsive design
