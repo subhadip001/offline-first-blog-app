@@ -73,6 +73,9 @@ export async function PATCH(
     const json = await request.json();
     const { title, content } = json;
 
+    console.log("title", title);
+    console.log("content", content);
+
     if (!title?.trim() || !content?.trim()) {
       return NextResponse.json(
         { error: "Title and content are required" },

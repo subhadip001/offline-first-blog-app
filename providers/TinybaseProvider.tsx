@@ -141,6 +141,7 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
                     break;
 
                   case "update":
+                    console.log("change", change);
                     response = await fetch(
                       `/api/${change.table}/${change.id}`,
                       {
@@ -149,7 +150,7 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
                           "Content-Type": "application/json",
                           Authorization: `Bearer ${token}`,
                         },
-                        body: JSON.stringify(change.data),
+                        body: change.data as string,
                       }
                     );
                     break;
@@ -236,6 +237,9 @@ export function TinybaseProvider({ children }: { children: ReactNode }) {
 
     queryClient.invalidateQueries({
       queryKey: [QueryKeys.POSTS],
+    });
+    queryClient.invalidateQueries({
+      queryKey: [QueryKeys.POST],
     });
   };
 

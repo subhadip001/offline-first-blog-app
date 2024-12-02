@@ -23,7 +23,7 @@ export function UpdatePostDialog({ post }: UpdatePostDialogProps) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);
-  const { updatePostMutation, isOnline } = usePosts();
+  const { updatePostMutation, updatePostOffline, isOnline } = usePosts();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +35,7 @@ export function UpdatePostDialog({ post }: UpdatePostDialogProps) {
 
     try {
       if (!isOnline) {
-        // updatePostOffline(updateData);
+        updatePostOffline(updateData);
       } else {
         await updatePostMutation.mutateAsync(updateData);
       }
@@ -81,10 +81,7 @@ export function UpdatePostDialog({ post }: UpdatePostDialogProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              type="submit"
-              disabled={updatePostMutation.isPending}
-            >
+            <Button type="submit" disabled={updatePostMutation.isPending}>
               {updatePostMutation.isPending ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>

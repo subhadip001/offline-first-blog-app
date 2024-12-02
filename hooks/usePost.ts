@@ -21,8 +21,6 @@ export function usePost(postId: string) {
     refetchOnWindowFocus: false,
   });
 
-  console.log(onlineData);
-
   // Sync online data with local store
   useEffect(() => {
     if (store && onlineData && isOnline) {

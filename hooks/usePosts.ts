@@ -206,25 +206,31 @@ export function usePosts(options: UsePostsOptions = {}) {
     }
   };
 
-  // const updatePostOffline = async (postData: UpdatePostData) => {
-  //   const offlineData = await getOfflinePosts();
-  //   const updatedPosts = offlineData.posts.map((post) =>
-  //     post.id === postData.id
-  //       ? { ...post, ...postData, updatedAt: new Date().toISOString() }
-  //       : post
-  //   );
+  const updatePostOffline = async (postData: UpdatePostData) => {
+    if (!store) return;
 
-  //   await setOfflinePosts({
-  //     ...offlineData,
-  //     posts: updatedPosts,
-  //     pendingUpdates: [
-  //       ...offlineData.pendingUpdates,
-  //       { type: "UPDATE", data: postData },
-  //     ],
-  //   });
+    const existingPost = store.getRow("posts", postData.id);
 
-  //   queryClient.setQueryData<Post[]>(["posts"], updatedPosts);
-  // };
+    if (!existingPost) return;
+
+    const updatedPost = {
+      ...existingPost,
+      ...postData,
+      updatedAt: new Date().toISOString(),
+    };
+
+    store.setRow("posts", postData.id, updatedPost);
+
+    store.setRow("pendingChanges", postData.id, {
+      type: "update",
+      table: "posts",
+      data: JSON.stringify(postData),
+      id: postData.id,
+      timestamp: Date.now(),
+    });
+
+    return updatedPost;
+  };
 
   const createPostMutation = useMutation({
     mutationFn: createPost,
@@ -266,7 +272,7 @@ export function usePosts(options: UsePostsOptions = {}) {
     deletePostMutation,
     deletePostOffline,
     updatePostMutation,
-    // updatePostOffline,
+    updatePostOffline,
     canDeletePost,
     canEditPost,
     isOnline,
