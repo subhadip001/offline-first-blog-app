@@ -48,6 +48,15 @@ A modern blog application built with Next.js that prioritizes offline functional
 - Progressive enhancement
 - Responsive design for all devices
 
+### 6. Testing
+
+- Some Jest tests added
+
+### 7. Deployment
+
+- Vercel for deployment
+- Also Dockerized it, published to Gihub Container Registry and deployed to AWS
+
 ## Challenges Faced
 
 - Implementation of JWT from `jsonwebtoken` in Next.js as `crypto` is not available in `edge` runtime. Hence, `jose` package was used.
@@ -62,7 +71,6 @@ A modern blog application built with Next.js that prioritizes offline functional
 - Improved UX and UI
 - Improving the lastsync feature
 - Removing Auth to View Posts and Comments
-- Dockerizing the app
 
 ## Getting Started
 
