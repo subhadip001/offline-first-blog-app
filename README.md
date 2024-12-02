@@ -55,6 +55,14 @@ A modern blog application built with Next.js that prioritizes offline functional
 - Implementation of Offline Storage in `tinybase` was my first time. Faced issues like updating local store in offline mode without reloading, cause i was using react-query for that also. But overcame it.
 - As of now, I have implemented the simple approach to sync changes. Maintaining a queue of changes to be synced and processing them in the background. Due to time constraints, I have not implemented conflict resolution and data reconciliation using CRDT.
 
+## Improvements
+
+- Implementing conflict resolution and data reconciliation using CRDT
+- Implementing pagination and edit for comments
+- Improved UX and UI
+- Improving the lastsync feature
+- Adding more features
+
 ## Getting Started
 
 First, run the development server:
