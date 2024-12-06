@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Row } from "tinybase";
 import { useAuthContext } from "@/providers/AuthProvider";
 import { useEffect, useState } from "react";
+import { handleApiResponse } from "@/lib/api-utils";
 
 export function usePost(postId: string) {
   const { store, isOnline } = useTinybase();
@@ -103,12 +104,7 @@ export function usePost(postId: string) {
         body: JSON.stringify({ content }),
       });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to create comment");
-      }
-
-      return res.json();
+      return handleApiResponse(res);
     } else {
     }
   };
@@ -147,10 +143,7 @@ export function usePost(postId: string) {
         }
       );
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.message || "Failed to delete comment");
-      }
+      await handleApiResponse(res);
     } else {
     }
   };

@@ -6,8 +6,9 @@ import { useAuthContext } from "@/providers/AuthProvider";
 import { fetchPosts, QueryKeys } from "@/lib/queries";
 import { CreatePostData, Post, UpdatePostData } from "@/lib/types";
 import { v4 as uuidv4 } from "uuid";
-import { useEffect, useState } from "react";
 import { Row } from "tinybase";
+import { handleApiResponse } from "@/lib/api-utils";
+import { useEffect, useState } from "react";
 
 interface UsePostsOptions {
   page?: number;
@@ -97,11 +98,7 @@ export function usePosts(options: UsePostsOptions = {}) {
         body: JSON.stringify(postData),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to create post");
-      }
-
-      const createdPost = await res.json();
+      const createdPost = await handleApiResponse(res);
       store?.setRow("posts", createdPost.id, createdPost);
       return createdPost;
     } else {
@@ -139,10 +136,7 @@ export function usePosts(options: UsePostsOptions = {}) {
         },
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to delete post");
-      }
-
+      await handleApiResponse(res);
       // Delete post and its comments from local store
       store?.delRow("posts", postId);
       const commentsTable = store?.getTable("comments");
@@ -195,13 +189,9 @@ export function usePosts(options: UsePostsOptions = {}) {
         body: JSON.stringify(postData),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to create post");
-      }
-
-      const createdPost = await res.json();
-      store?.setRow("posts", createdPost.id, createdPost);
-      return createdPost;
+      const updatedPost = await handleApiResponse(res);
+      store?.setRow("posts", updatedPost.id, updatedPost);
+      return updatedPost;
     } else {
     }
   };
